@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "start": "ts-node-esm src/index.ts"
+    "start": "npx playwright install-deps && ts-node-esm src/index.ts"
   },
   "keywords": [],
   "author": "Andres",

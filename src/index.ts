@@ -101,7 +101,7 @@ const step6 = async (page: Page) => {
 }
 
 const scrape = async () => {
-  const browser = await chromium.launch({ headless: false })
+  const browser = await chromium.launch()
   try {
     const page = await browser.newPage()
     await step1(page)
