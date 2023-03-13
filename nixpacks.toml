@@ -1,5 +1,4 @@
 [phases.setup]
-  buildImage = "mcr.microsoft.com/playwright:v1.31.0-focal"
   aptPkgs = [
     '...',
     'fonts-liberation',
