@@ -139,5 +139,9 @@ bot.on(message('text'), async (ctx) => {
 
 void bot.launch()
 
-process.once('SIGINT', () => { bot.stop('SIGINT') })
-process.once('SIGTERM', () => { bot.stop('SIGTERM') })
+process.once('SIGINT', () => {
+  bot.stop('SIGINT')
+})
+process.once('SIGTERM', () => {
+  bot.stop('SIGTERM')
+})
