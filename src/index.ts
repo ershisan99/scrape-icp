@@ -115,7 +115,15 @@ const scrape = async () => {
     geolocation: { longitude: -3.703790, latitude: 40.416775 },
     userAgent: 'Chrome/91.0.4472.77',
     timezoneId: 'Europe/Madrid',
-    locale: 'es-ES'
+    locale: 'es-ES',
+    bypassCSP: true,
+    viewport: { width: 1920, height: 1080 },
+    deviceScaleFactor: 1,
+    isMobile: false,
+    hasTouch: false,
+    acceptDownloads: true,
+    javaScriptEnabled: true
+
   })
   try {
     const page = await browser.newPage()
