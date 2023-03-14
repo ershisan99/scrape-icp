@@ -42,8 +42,8 @@ bot.start(async (ctx) => {
   )
 })
 const step1 = async (page: Page) => {
-  await page.goto(url)
   console.log('step 1', url, JSON.stringify(page))
+  await page.goto(url)
   await sendScreenshot(bot, page, 'step 1')
 }
 const step2 = async (page: Page) => {
