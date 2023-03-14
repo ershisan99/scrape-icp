@@ -116,10 +116,10 @@ const scrape = async () => {
     await browser?.close?.()
   }
 }
-const cronTask = cron.schedule('*/1 * * * *', async () => {
+const cronTask = cron.schedule('*/1 9-17 * * *', async () => {
   await scrape()
 })
-console.log('valid: ', cron.validate('*/1 * * * *'))
+console.log('valid: ', cron.validate('*/1 9-17 * * *'))
 bot.on(message('text'), async (ctx) => {
   const text = ctx.message?.text
   if (ctx.message.from.id !== Number(process.env.MY_TELEGRAM_ID)) return
