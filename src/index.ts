@@ -102,7 +102,7 @@ const step6 = async (page: Page) => {
 }
 
 const scrape = async () => {
-  const browser = await chromium.launch()
+  const browser = await chromium.launch({ timeout: 200000 })
   try {
     const page = await browser.newPage()
     console.log('scraping...')
@@ -114,6 +114,7 @@ const scrape = async () => {
     await step6(page)
     await browser.close()
   } catch (e) {
+    console.error(e)
     await sendText(bot, JSON.stringify(e))
     await browser?.close?.()
   }
