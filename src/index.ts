@@ -1,5 +1,5 @@
 import { chromium, type Page } from 'playwright'
-import { type Browser, expect } from '@playwright/test'
+import { type BrowserContext, expect } from '@playwright/test'
 import { Markup, Telegraf } from 'telegraf'
 import dotenv from 'dotenv'
 import { type InputFile } from 'telegraf/types'
@@ -7,8 +7,8 @@ import { message } from 'telegraf/filters'
 import cron from 'node-cron'
 
 dotenv.config()
-const url = 'https://google.com'
-// const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/citar?p=28&locale=es&appkey=null'
+// const url = 'https://google.com'
+const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/citar?p=28&locale=es&appkey=null'
 const { NIE, NAME, COUNTRY_CODE } = process.env
 const NO_APPOINTMENT = 'no hay citas disponibles'
 const delay = async (ms: number) => await new Promise(resolve => setTimeout(resolve, ms))
@@ -78,7 +78,7 @@ const step4 = async (page: Page) => {
   await sendScreenshot(bot, page, 'step 4')
 }
 
-const step5 = async (page: Page, browser: Browser) => {
+const step5 = async (page: Page, browser: BrowserContext) => {
   try {
     if (await page.getByText(NO_APPOINTMENT).count() > 0) {
       await sendScreenshot(bot, page, 'step 5 failed')
@@ -103,13 +103,19 @@ const step6 = async (page: Page) => {
 }
 
 const scrape = async () => {
-  const browser = await chromium.launch({
+  const chr = await chromium.launch({
     timeout: 200000,
     logger: {
       isEnabled: (name, severity) => name === 'browser',
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       log: (name, severity, message, args) => { console.log(`${name} ${message}`) }
     }
+  })
+  const browser = await chr.newContext({
+    geolocation: { longitude: -3.703790, latitude: 40.416775 },
+    userAgent: 'Chrome/91.0.4472.77',
+    timezoneId: 'Europe/Madrid',
+    locale: 'es-ES'
   })
   try {
     const page = await browser.newPage()
