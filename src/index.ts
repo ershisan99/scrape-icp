@@ -102,7 +102,14 @@ const step6 = async (page: Page) => {
 }
 
 const scrape = async () => {
-  const browser = await chromium.launch({ timeout: 200000 })
+  const browser = await chromium.launch({
+    timeout: 200000,
+    logger: {
+      isEnabled: (name, severity) => name === 'browser',
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      log: (name, severity, message, args) => { console.log(`${name} ${message}`) }
+    }
+  })
   try {
     const page = await browser.newPage()
     console.log('scraping...')
