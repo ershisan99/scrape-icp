@@ -43,6 +43,7 @@ bot.start(async (ctx) => {
 })
 const step1 = async (page: Page) => {
   await page.goto(url)
+  console.log('step 1', url, JSON.stringify(page))
   await sendScreenshot(bot, page, 'step 1')
 }
 const step2 = async (page: Page) => {
@@ -104,6 +105,7 @@ const scrape = async () => {
   const browser = await chromium.launch()
   try {
     const page = await browser.newPage()
+    console.log('scraping...')
     await step1(page)
     await step2(page)
     await step3(page)
