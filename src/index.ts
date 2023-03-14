@@ -8,7 +8,7 @@ import cron from 'node-cron'
 
 dotenv.config()
 // const url = 'https://google.com'
-const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/citar?p=28&locale=es&appkey=null'
+const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/icpplus'
 const { NIE, NAME, COUNTRY_CODE } = process.env
 const NO_APPOINTMENT = 'no hay citas disponibles'
 const delay = async (ms: number) => await new Promise(resolve => setTimeout(resolve, ms))
