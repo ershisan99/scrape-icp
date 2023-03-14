@@ -107,8 +107,10 @@ const scrape = async () => {
     timeout: 200000,
     logger: {
       isEnabled: (name, severity) => name === 'browser',
+      log: (name, severity, message, args) => {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      log: (name, severity, message, args) => { console.log(`${name} ${message}`) }
+        console.log(`${name} ${message}`)
+      }
     }
   })
   const browser = await chr.newContext({
@@ -122,8 +124,25 @@ const scrape = async () => {
     isMobile: false,
     hasTouch: false,
     acceptDownloads: true,
-    javaScriptEnabled: true
-
+    javaScriptEnabled: true,
+    permissions: [
+      'geolocation',
+      'notifications',
+      'midi',
+      'midi-sysex',
+      'push',
+      'camera',
+      'microphone',
+      'background-sync',
+      'ambient-light-sensor',
+      'accelerometer',
+      'gyroscope',
+      'magnetometer',
+      'accessibility-events',
+      'clipboard-read',
+      'clipboard-write',
+      'payment-handler'
+    ]
   })
   try {
     const page = await browser.newPage()
