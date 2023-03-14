@@ -11,13 +11,22 @@ const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/citar?p=28
 const { NIE, NAME, COUNTRY_CODE } = process.env
 const NO_APPOINTMENT = 'no hay citas disponibles'
 const delay = async (ms: number) => await new Promise(resolve => setTimeout(resolve, ms))
-const sendScreenshot = async (bot: Telegraf, page: Page, message?: string) => {
+const screenshots = [] as Array<{ inputFile: InputFile, message: string }>
+const sendScreenshots = async (bot: Telegraf) => {
+  await bot.telegram.sendMediaGroup(CHAT_ID, screenshots.map(({ inputFile, message }) => ({
+    type: 'photo',
+    media: inputFile,
+    caption: message
+  })))
+  screenshots.length = 0
+}
+const saveScreenshot = async (page: Page, message: string) => {
   const screenshot = await page.screenshot()
   const inputFile: InputFile = {
     source: screenshot,
     filename: 'screenshot.png'
   }
-  await bot.telegram.sendDocument(CHAT_ID, inputFile, { caption: message })
+  screenshots.push({ inputFile, message })
 }
 const sendText = async (bot: Telegraf, text: string) => {
   await bot.telegram.sendMessage(CHAT_ID, text)
@@ -43,7 +52,7 @@ bot.start(async (ctx) => {
 })
 const step1 = async (page: Page) => {
   await page.goto(url)
-  await sendScreenshot(bot, page, 'step 1')
+  await saveScreenshot(page, 'step 1')
 }
 const step2 = async (page: Page) => {
   const select = page.getByLabel('TRÁMITES CUERPO NACIONAL DE POLICÍA')
@@ -54,9 +63,9 @@ const step2 = async (page: Page) => {
     await delay(2000)
 
     await page.click('#btnAceptar')
-    await sendScreenshot(bot, page, 'step 2')
+    await saveScreenshot(page, 'step 2')
   } catch (e) {
-    await sendScreenshot(bot, page, 'select is not enabled')
+    await saveScreenshot(page, 'select is not enabled')
     await sendText(bot, 'select is not enabled, ' + JSON.stringify(e))
     await page.close()
   }
@@ -64,22 +73,22 @@ const step2 = async (page: Page) => {
 
 const step3 = async (page: Page) => {
   await page.click('#btnEntrar')
-  await sendScreenshot(bot, page, 'step 3')
+  await saveScreenshot(page, 'step 3')
 }
 const step4 = async (page: Page) => {
   await page.locator('#txtIdCitado').fill(NIE ?? '')
   await page.locator('#txtDesCitado').fill(NAME ?? '')
   await page.locator('#txtPaisNac').selectOption([COUNTRY_CODE ?? ''])
   await delay(2000)
-  await sendScreenshot(bot, page, 'filled form')
+  await saveScreenshot(page, 'filled form')
   await page.click('#btnEnviar')
-  await sendScreenshot(bot, page, 'step 4')
+  await saveScreenshot(page, 'step 4')
 }
 
 const step5 = async (page: Page, browser: Browser) => {
   try {
     if (await page.getByText(NO_APPOINTMENT).count() > 0) {
-      await sendScreenshot(bot, page, 'step 5 failed')
+      await saveScreenshot(page, 'step 5 failed')
       await sendText(bot, 'No hay citas disponibles')
       await page.close()
       await browser.close()
@@ -88,16 +97,16 @@ const step5 = async (page: Page, browser: Browser) => {
     await delay(2000)
     const button = await page.waitForSelector('#btnEnviar', { timeout: 1000 })
     await button.click()
-    await sendScreenshot(bot, page, 'step 5')
+    await saveScreenshot(page, 'step 5')
   } catch (e) {
-    await sendScreenshot(bot, page, 'step 5')
+    await saveScreenshot(page, 'step 5')
     await sendText(bot, 'No hay citas disponibles')
   }
 }
 const step6 = async (page: Page) => {
   await delay(2000)
   await page.click('#btnEnviar')
-  await sendScreenshot(bot, page, 'step 6')
+  await saveScreenshot(page, 'step 6')
 }
 
 const scrape = async () => {
@@ -114,12 +123,14 @@ const scrape = async () => {
   } catch (e) {
     await sendText(bot, JSON.stringify(e))
     await browser?.close?.()
+  } finally {
+    await sendScreenshots(bot)
   }
 }
-const cronTask = cron.schedule('*/1 9-17 * * *', async () => {
+const cronTask = cron.schedule('*/4 9-17 * * *', async () => {
   await scrape()
 })
-console.log('valid: ', cron.validate('*/1 9-17 * * *'))
+console.log('valid: ', cron.validate('*/4 9-17 * * *'))
 bot.on(message('text'), async (ctx) => {
   const text = ctx.message?.text
   if (ctx.message.from.id !== Number(process.env.MY_TELEGRAM_ID)) return
