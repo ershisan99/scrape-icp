@@ -8,5 +8,4 @@ COPY tsconfig.json /app/
 RUN apt-get update && apt-get -y install libnss3 libatk-bridge2.0-0 libdrm-dev libxkbcommon-dev libgbm-dev libasound-dev libatspi2.0-0 libxshmfence-dev
 RUN npm install -g pnpm
 RUN pnpm install
-RUN npx playwright install
-RUN pnpm run start
+RUN npx playwright install chromium
