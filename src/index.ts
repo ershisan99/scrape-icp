@@ -121,7 +121,7 @@ const scrape = async () => {
 }
 const cronTask = cron.schedule('*/1 * * * *', async () => {
   await scrape()
-})
+}, { scheduled: false })
 console.log('valid: ', cron.validate('*/1 * * * *'))
 bot.on(message('text'), async (ctx) => {
   const text = ctx.message?.text
