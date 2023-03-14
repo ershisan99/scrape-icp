@@ -44,7 +44,7 @@ bot.start(async (ctx) => {
 })
 const step1 = async (page: Page) => {
   console.log('step 1', url, JSON.stringify(page))
-  await page.goto(url)
+  await page.goto(url, { timeout: 100000 })
   await sendScreenshot(bot, page, 'step 1')
 }
 const step2 = async (page: Page) => {
@@ -126,22 +126,7 @@ const scrape = async () => {
     acceptDownloads: true,
     javaScriptEnabled: true,
     permissions: [
-      'geolocation',
-      'notifications',
-      'midi',
-      'midi-sysex',
-      'push',
-      'camera',
-      'microphone',
-      'background-sync',
-      'ambient-light-sensor',
-      'accelerometer',
-      'gyroscope',
-      'magnetometer',
-      'accessibility-events',
-      'clipboard-read',
-      'clipboard-write',
-      'payment-handler'
+      'geolocation'
     ]
   })
   try {
