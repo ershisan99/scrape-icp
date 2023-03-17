@@ -104,11 +104,11 @@ const step5 = async (page: Page, browser: Browser) => {
     await sendText(bot, 'No hay citas disponibles')
   }
 }
-const step6 = async (page: Page) => {
-  await delay(2000)
-  await page.click('#btnEnviar')
-  await saveScreenshot(page, 'step 6')
-}
+// const step6 = async (page: Page) => {
+//   await delay(2000)
+//   await page.click('#btnEnviar')
+//   await saveScreenshot(page, 'step 6')
+// }
 
 const step7 = async (page: Page) => {
   const select = page.getByLabel('Oficina:')
@@ -131,7 +131,7 @@ const step8 = async (page: Page) => {
   try {
     await page.locator('#txtTelefonoCitado').fill(PHONE_NUMBER ?? '')
     await page.locator('#emailUNO').fill(EMAIL ?? '')
-    await page.locator('#emailDOS').selectOption([EMAIL ?? ''])
+    await page.locator('#emailDOS').fill(EMAIL ?? '')
     await delay(2000)
     await page.click('#btnSiguiente')
     await saveScreenshot(page, 'step 8')
@@ -186,7 +186,7 @@ const step10 = async (page: Page) => {
   }
 }
 const scrape = async () => {
-  const browser = await chromium.launch({ slowMo: 100 })
+  const browser = await chromium.launch({ slowMo: 100, headless: false })
   try {
     const page = await browser.newPage()
     await step1(page)
@@ -194,7 +194,7 @@ const scrape = async () => {
     await step3(page)
     await step4(page)
     await step5(page, browser)
-    await step6(page)
+    // await step6(page)
     await step7(page)
     await step8(page)
     await step9(page)
