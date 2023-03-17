@@ -1,14 +1,15 @@
 import { chromium, type Page } from 'playwright'
 import { type Browser, expect } from '@playwright/test'
-import { Markup, Telegraf } from 'telegraf'
+import { type Context, Markup, Telegraf } from 'telegraf'
 import dotenv from 'dotenv'
 import { type InputFile } from 'telegraf/types'
 import { message } from 'telegraf/filters'
 import cron from 'node-cron'
 
 dotenv.config()
-const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/citar?p=28&locale=es&appkey=null'
-const { NIE, NAME, COUNTRY_CODE } = process.env
+// const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/citar?p=28&locale=es&appkey=null'
+const url = 'https://icp.administracionelectronica.gob.es/icpplustiem/citar?p=1&locale=es&appkey=null'
+const { NIE, NAME, COUNTRY_CODE, EMAIL, PHONE_NUMBER } = process.env
 const NO_APPOINTMENT = 'no hay citas disponibles'
 const delay = async (ms: number) => await new Promise(resolve => setTimeout(resolve, ms))
 const screenshots = [] as Array<{ inputFile: InputFile, message: string }>
@@ -109,8 +110,83 @@ const step6 = async (page: Page) => {
   await saveScreenshot(page, 'step 6')
 }
 
+const step7 = async (page: Page) => {
+  const select = page.getByLabel('Oficina:')
+  try {
+    await expect(select).toBeEnabled()
+    await select.selectOption({ index: 0 })
+
+    await delay(2000)
+
+    await page.click('#btnSiguiente')
+    await saveScreenshot(page, 'step 7')
+  } catch (e) {
+    await saveScreenshot(page, 'select is not enabled')
+    await sendText(bot, 'select is not enabled, ' + JSON.stringify(e))
+    await page.close()
+  }
+}
+
+const step8 = async (page: Page) => {
+  try {
+    await page.locator('#txtTelefonoCitado').fill(PHONE_NUMBER ?? '')
+    await page.locator('#emailUNO').fill(EMAIL ?? '')
+    await page.locator('#emailDOS').selectOption([EMAIL ?? ''])
+    await delay(2000)
+    await page.click('#btnSiguiente')
+    await saveScreenshot(page, 'step 8')
+  } catch (e) {
+    await saveScreenshot(page, 'step 8 failed' + JSON.stringify(e))
+  }
+}
+const step9 = async (page: Page) => {
+  try {
+    page.on('dialog', dialog => {
+      void dialog.accept()
+    }
+    )
+    const captcha = await page.waitForSelector('#captcha', { timeout: 1000 })
+    const isCaptchaVisible = await captcha.isVisible()
+    if (isCaptchaVisible) {
+      await saveScreenshot(page, 'captcha')
+      await sendText(bot, 'captcha')
+      const captchaSolved = await waitForUserMessage()
+      if (typeof captchaSolved === 'string') {
+        await captcha.fill(captchaSolved)
+      }
+      await saveScreenshot(page, 'step 9 captcha solved')
+    }
+    await page.getByRole('link', { name: 'LIBRE' }).click()
+    await saveScreenshot(page, 'step 9 finished')
+  } catch (e) {
+    await saveScreenshot(page, 'step 9 failed' + JSON.stringify(e))
+  }
+}
+const step10 = async (page: Page) => {
+  try {
+    const codeFromPhone = await page.waitForSelector('#txtCodigoVerificacion', { timeout: 1000 })
+    const isVerificationVisible = await codeFromPhone.isVisible()
+    if (isVerificationVisible) {
+      await sendText(bot, 'verification code')
+      const solved = await waitForUserMessage()
+      if (typeof solved === 'string') {
+        await codeFromPhone.fill(solved)
+      }
+      await saveScreenshot(page, 'step 10 verification solved')
+    }
+    await page.locator('#conforme').click()
+    await delay(500)
+    await page.locator('#conformidadCorreo').click()
+    await delay(500)
+    await saveScreenshot(page, 'step 10 before click')
+    await page.locator('#btnConfirmar').click()
+    await saveScreenshot(page, 'step 10 finished')
+  } catch (e) {
+    await saveScreenshot(page, 'step 10 failed' + JSON.stringify(e))
+  }
+}
 const scrape = async () => {
-  const browser = await chromium.launch({ headless: false })
+  const browser = await chromium.launch({ slowMo: 100 })
   try {
     const page = await browser.newPage()
     await step1(page)
@@ -119,6 +195,11 @@ const scrape = async () => {
     await step4(page)
     await step5(page, browser)
     await step6(page)
+    await step7(page)
+    await step8(page)
+    await step9(page)
+    await step10(page)
+    await page.close()
     await browser.close()
   } catch (e) {
     await sendText(bot, JSON.stringify(e))
@@ -129,8 +210,17 @@ const scrape = async () => {
 }
 const cronTask = cron.schedule('*/4 9-17 * * *', async () => {
   await scrape()
-})
+}, { scheduled: false })
 console.log('valid: ', cron.validate('*/4 9-17 * * *'))
+async function waitForUserMessage () {
+  return await new Promise((resolve) => {
+    const messageHandler = async (newCtx: Context) => {
+      resolve(newCtx.message)
+    }
+
+    bot.on('message', messageHandler)
+  })
+}
 bot.on(message('text'), async (ctx) => {
   const text = ctx.message?.text
   if (ctx.message.from.id !== Number(process.env.MY_TELEGRAM_ID)) return
